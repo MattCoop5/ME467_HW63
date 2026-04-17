@@ -334,35 +334,6 @@ def confusion_matrix(
     return cm
 
 
-def summarize_test_results(
-    cms: dict[str, np.ndarray], class_names: list[str]
-) -> None:
-    print("\n=== Test Accuracy Summary ===")
-
-    per_class_by_model: dict[str, np.ndarray] = {}
-    overall_by_model: dict[str, float] = {}
-
-    for model_name, cm in cms.items():
-        cm = cm.astype(np.float64)
-        total = cm.sum()
-        overall = float(np.trace(cm) / (total + 1e-8))
-        per_class = np.diag(cm) / (cm.sum(axis=1) + 1e-8)
-        overall_by_model[model_name] = overall
-        per_class_by_model[model_name] = per_class
-
-        print(f"{model_name}: overall test accuracy = {overall:.4f}")
-        for i, cname in enumerate(class_names):
-            print(f"  class {i} ({cname}) accuracy = {per_class[i]:.4f}")
-
-    print("\nBest architecture by class:")
-    model_names = list(cms.keys())
-    stacked = np.vstack([per_class_by_model[m] for m in model_names])
-    best_idx = np.argmax(stacked, axis=0)
-    for i, cname in enumerate(class_names):
-        m = model_names[int(best_idx[i])]
-        print(f"  {cname}: {m} ({stacked[int(best_idx[i]), i]:.4f})")
-
-
 def plot_training_histories(histories: dict[str, dict[str, list[float]]]) -> None:
     fig, axes = plt.subplots(2, 3, figsize=(14, 7), sharex=True)
     model_names = list(histories.keys())
@@ -555,7 +526,6 @@ def main() -> None:
         "CNN1D": confusion_matrix(y_true_c, y_pred_c, num_classes=3),
         "Transformer": confusion_matrix(y_true_t, y_pred_t, num_classes=3),
     }
-    summarize_test_results(cms, class_names)
     plot_confusion_matrices(cms, class_names)
 
     plot_transformer_attention_heatmaps(
